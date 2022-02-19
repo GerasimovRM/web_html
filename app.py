@@ -1,12 +1,75 @@
-from flask import Flask, url_for
+from flask import Flask, url_for, render_template, redirect
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
+
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, BooleanField, SubmitField
+from wtforms.validators import DataRequired
 
 
-@app.route('/')
-@app.route('/index')
-def index():
-    return "Привет, Яндекс!"
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, BooleanField, SubmitField
+from wtforms.validators import DataRequired
+
+
+class CrashLoginForm(FlaskForm):
+    astronaut_id = StringField('ID астронавта', validators=[DataRequired()])
+    astronaut_password = PasswordField('Пароль астронавта', validators=[DataRequired()])
+    captain_id = StringField('ID капитана', validators=[DataRequired()])
+    captain_password = PasswordField('Пароль капитана', validators=[DataRequired()])
+    submit = SubmitField('Доступ')
+
+
+class LoginForm(FlaskForm):
+    username = StringField('Логин', validators=[DataRequired()])
+    password = PasswordField('Пароль', validators=[DataRequired()])
+    remember_me = BooleanField('Запомнить меня')
+    submit = SubmitField('Войти')
+
+
+@app.route('/<title>')
+@app.route('/index/<title>')
+def index(title):
+    return render_template("base.html",
+                           title=title)
+
+
+@app.route("/training/<prof>")
+def training(prof):
+    if "инженер" in prof.lower() or "строитель" in prof.lower():
+        return render_template("training.html",
+                               title="Инженерные тренажеры",
+                               image=url_for("static", filename="img/it.gif"))
+    else:
+        return render_template("training.html",
+                               title="Научные симуляторы",
+                               image=url_for("static", filename="img/ns.gif"))
+
+
+@app.route("/list_prof/<list_type>")
+def list_prof(list_type):
+    ll = ["инженер-исследователь",
+          "пилот",
+          "строитель",
+          "экзобиолог",
+          "врач",
+          "инженер по терраформированию",
+          "климатолог",
+          "специалист по радиационной защите",
+          "астрогеолог",
+          "гляциолог",
+          "инженер жизнеобеспечения",
+          "метеоролог",
+          "оператор марсохода",
+          "киберинженер",
+          "штурман",
+          "пилот дронов"]
+    return render_template("list_prof.html",
+                           title="Список профессий",
+                           list_prof=ll,
+                           list_type=list_type)
+
 
 
 @app.route('/countdown')
@@ -35,6 +98,21 @@ def return_sample_page():
                     <h1>Первая HTML-страница</h1>
                   </body>
                 </html>"""
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        return redirect('/success')
+    return render_template('login.html', title='Авторизация', form=form)
+
+
+@app.route("/crash_login", methods=['GET', 'POST'])
+def crash_login():
+    form = CrashLoginForm()
+    if form.validate_on_submit():
+        return redirect('/success')
+    return render_template('crash_login.html', title='Аварийный доступ', form=form)
 
 
 if __name__ == '__main__':
