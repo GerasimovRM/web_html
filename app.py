@@ -1,8 +1,13 @@
-from flask import Flask, url_for, render_template, redirect
+from flask import Flask, url_for, render_template, redirect, request, make_response, session
+from flask_login import LoginManager
+
+from data.db_session import global_init
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
-
+login_manager = LoginManager()
+login_manager.init_app(app)
+global_init("database.db")
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
 from wtforms.validators import DataRequired
@@ -70,8 +75,6 @@ def list_prof(list_type):
                            list_prof=ll,
                            list_type=list_type)
 
-
-
 @app.route('/countdown')
 def countdown():
     countdown_list = [str(x) for x in range(10, 0, -1)]
@@ -113,6 +116,31 @@ def crash_login():
     if form.validate_on_submit():
         return redirect('/success')
     return render_template('crash_login.html', title='Аварийный доступ', form=form)
+
+
+
+@app.route("/cookie_test")
+def cookie_test():
+    visits_count = int(request.cookies.get("visits_count", 0))
+    if visits_count:
+        res = make_response(
+            f"Вы пришли на эту страницу {visits_count + 1} раз")
+        res.set_cookie("visits_count", str(visits_count + 1),
+                       max_age=60 * 60 * 24 * 365 * 2)
+    else:
+        res = make_response(
+            "Вы пришли на эту страницу в первый раз за последние 2 года")
+        res.set_cookie("visits_count", '1',
+                       max_age=60 * 60 * 24 * 365 * 2)
+    return res
+
+
+@app.route("/session_test")
+def session_test():
+    visits_count = session.get('visits_count', 0)
+    session['visits_count'] = visits_count + 1
+    return make_response(
+        f"Вы пришли на эту страницу {visits_count + 1} раз")
 
 
 if __name__ == '__main__':
