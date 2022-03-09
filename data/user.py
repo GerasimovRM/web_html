@@ -1,10 +1,10 @@
 from flask_login import UserMixin
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.orm import relation
-
+from werkzeug.security import generate_password_hash, check_password_hash
 from data.db_session import SqlAlchemyBase
 
-
+# https://pythobyte.com/flask-user-authentication-be0198e8/
 class User(SqlAlchemyBase, UserMixin):
     __tablename__ = "users"
 
@@ -23,3 +23,9 @@ class User(SqlAlchemyBase, UserMixin):
 
     def __repr__(self):
         return f"<Colonist> {self.id} {self.surname} {self.name}"
+
+    def set_password(self, password):
+        self.hashed_password = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.hashed_password, password)
